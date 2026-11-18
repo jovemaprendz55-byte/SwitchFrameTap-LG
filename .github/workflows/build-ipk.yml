@@ -1,0 +1,29 @@
+name: Build webOS IPK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install webOS CLI
+        run: npm install --global @webos-tools/cli
+      - name: Package application
+        run: |
+          mkdir -p dist
+          ares-package ./app --no-minify --outdir ./dist
+      - name: Upload IPK
+        uses: actions/upload-artifact@v4
+        with:
+          name: switch-frame-tap-lg-ipk
+          path: dist/*.ipk
+          if-no-files-found: error
