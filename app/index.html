@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>Switch Frame Tap LG</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="screen">
+    <header><div class="mark">SFT</div><div><p class="eyebrow">PROJETO EXPERIMENTAL · webOS</p><h1>Switch Frame Tap</h1></div></header>
+    <section class="hero">
+      <div class="status-line"><span class="dot"></span><span id="state">Preparado para configuração</span></div>
+      <h2>Transmitir do Nintendo Switch<br>para sua TV LG</h2>
+      <p class="muted">Cliente experimental para webOS 23 · LG 32LR600BPSA</p>
+      <div class="form">
+        <label for="host">IP do Nintendo Switch</label>
+        <input id="host" type="text" placeholder="Ex.: 192.168.1.50" autocomplete="off">
+        <label for="port">Porta TCP</label>
+        <input id="port" type="number" value="9950">
+        <button id="connect">Verificar configuração</button>
+      </div>
+      <p id="feedback" role="status">O vídeo ainda não está conectado. Esta primeira versão prepara a interface e a validação dos dados.</p>
+    </section>
+    <section class="notice"><strong>Etapa atual: estrutura inicial</strong><p>O protocolo original usa TCP/UDP e vídeo H.264. A comunicação e o decodificador precisam ser implementados e testados no webOS antes de transmitir imagem.</p></section>
+    <footer>SwitchFrameTap-LG · versão 0.1.0 · Controle remoto: setas e OK</footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
