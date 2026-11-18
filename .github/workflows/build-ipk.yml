@@ -11,50 +11,62 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node.js for webOS CLI
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Setup Python for icon generation
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install build dependencies
-        run: python -m pip install Pillow
       - name: Install webOS TV CLI
         run: npm install --global @webos-tools/cli
-      - name: Generate required PNG icons
+      - name: Generate valid PNG icons (Python standard library only)
         run: |
-          python - <<'PY'
-          from PIL import Image, ImageDraw, ImageFont
+          python3 - <<'PY'
+          import struct
+          import zlib
           from pathlib import Path
-          out = Path("app")
-          for size, name in [(80, "icon.png"), (130, "largeIcon.png")]:
-              image = Image.new("RGBA", (size, size), (18, 27, 48, 255))
-              draw = ImageDraw.Draw(image)
-              draw.rounded_rectangle(
-                  (int(size*.06), int(size*.06), int(size*.94), int(size*.94)),
-                  radius=int(size*.20), fill=(109, 93, 252, 255)
-              )
-              try:
-                  font = ImageFont.truetype(
-                      "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                      int(size*.23)
-                  )
-              except OSError:
-                  font = ImageFont.load_default()
-              label = "SFT"
-              box = draw.textbbox((0, 0), label, font=font)
-              x = (size - (box[2] - box[0])) / 2
-              y = (size - (box[3] - box[1])) / 2 - box[1]
-              draw.text((x, y), label, font=font, fill=(255, 255, 255, 255))
-              image.save(out / name, "PNG")
+
+          def chunk(kind, data):
+              body = kind + data
+              return struct.pack(">I", len(data)) + body + struct.pack(">I", zlib.crc32(body) & 0xffffffff)
+
+          def make_png(path, size):
+              rows = []
+              for y in range(size):
+                  row = bytearray([0])
+                  for x in range(size):
+                      margin = max(2, size // 16)
+                      inside = margin <= x < size-margin and margin <= y < size-margin
+                      if inside:
+                          pixel = (109, 93, 252, 255)
+                      else:
+                          pixel = (18, 27, 48, 255)
+                      row.extend(pixel)
+                  rows.append(bytes(row))
+              raw = b"".join(rows)
+              png = (b"\x89PNG\r\n\x1a\n"
+                     + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0))
+                     + chunk(b"IDAT", zlib.compress(raw, 9))
+                     + chunk(b"IEND", b""))
+              Path(path).write_bytes(png)
+
+          app = Path("app")
+          app.mkdir(exist_ok=True)
+          make_png(app / "icon.png", 80)
+          make_png(app / "largeIcon.png", 130)
+          print("Generated:", *[str(p) for p in sorted(app.glob("*.png"))])
           PY
+      - name: Verify app package inputs
+        run: |
+          test -f app/appinfo.json
+          test -f app/index.html
+          test -f app/icon.png
+          test -f app/largeIcon.png
+          python3 -m json.tool app/appinfo.json
+          file app/icon.png app/largeIcon.png
+          ls -la app
       - name: Package webOS application
         run: |
-          ares-package ./app
           mkdir -p dist
-          find . -maxdepth 1 -type f -name '*.ipk' -exec mv {} dist/ \;
+          ares-package app --outdir dist
           test -n "$(find dist -maxdepth 1 -type f -name '*.ipk' -print -quit)"
       - name: Upload IPK
         uses: actions/upload-artifact@v4
