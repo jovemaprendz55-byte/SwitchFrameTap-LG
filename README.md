@@ -16,7 +16,7 @@ A interface inicial permite informar o endereço IPv4 do Nintendo Switch e a por
 
 O workflow GitHub Actions prepara os ícones PNG exigidos pelo webOS, instala o webOS TV CLI e tenta empacotar `app/` em um arquivo IPK. O arquivo gerado fica disponível como artefato da execução do workflow.
 
-## Próximas etapas técnicas
+Protocolo de rede já pesquisado: [docs/NETWORK-PROTOCOL.md](docs/NETWORK-PROTOCOL.md). As portas TCP 9950 e UDP 9951 e o beacon de descoberta foram confirmados no código-fonte original; o framing completo do vídeo ainda está em análise.\n\n## Próximas etapas técnicas
 
 1. Confirmar o formato exato das mensagens e o handshake da implementação de rede do Switch Frame Tap.
 2. Criar um JavaScript Service compatível com o Node.js 12.22.2 usado pelo webOS TV 23 para a conexão TCP/UDP.
