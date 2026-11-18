@@ -11,16 +11,46 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node.js
+      - name: Setup Node.js for webOS CLI
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install webOS CLI
+      - name: Install webOS TV CLI
         run: npm install --global @webos-tools/cli
-      - name: Package application
+      - name: Generate required PNG icons
         run: |
+          python3 -m pip install --user Pillow
+          python3 - <<'PY'
+          from PIL import Image, ImageDraw, ImageFont
+          from pathlib import Path
+          out = Path("app")
+          for size, name in [(80, "icon.png"), (130, "largeIcon.png")]:
+              image = Image.new("RGBA", (size, size), (18, 27, 48, 255))
+              draw = ImageDraw.Draw(image)
+              draw.rounded_rectangle(
+                  (int(size*.06), int(size*.06), int(size*.94), int(size*.94)),
+                  radius=int(size*.20), fill=(109, 93, 252, 255)
+              )
+              try:
+                  font = ImageFont.truetype(
+                      "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                      int(size*.23)
+                  )
+              except OSError:
+                  font = ImageFont.load_default()
+              label = "SFT"
+              box = draw.textbbox((0, 0), label, font=font)
+              x = (size - (box[2] - box[0])) / 2
+              y = (size - (box[3] - box[1])) / 2 - box[1]
+              draw.text((x, y), label, font=font, fill=(255, 255, 255, 255))
+              image.save(out / name, "PNG")
+          PY
+      - name: Package webOS application
+        run: |
+          ares-package ./app
           mkdir -p dist
-          ares-package ./app --no-minify --outdir ./dist
+          find . -maxdepth 1 -type f -name '*.ipk' -exec mv {} dist/ \;
+          test -n "$(find dist -maxdepth 1 -type f -name '*.ipk' -print -quit)"
       - name: Upload IPK
         uses: actions/upload-artifact@v4
         with:
