@@ -1,11 +1,12 @@
 {
   "id": "com.jovemaprendz.switchframetaplg",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "vendor": "jovemaprendz55-byte",
   "type": "web",
   "main": "index.html",
   "title": "Switch Frame Tap LG",
   "icon": "icon.png",
   "largeIcon": "largeIcon.png",
-  "resolution": "1280x720"
+  "resolution": "1280x720",
+  "requiredACG": []
 }
